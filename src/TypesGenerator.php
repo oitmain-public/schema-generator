@@ -353,18 +353,15 @@ class TypesGenerator
 
         foreach ($classes as $className => &$class) {
             $class['uses'] = $this->generateClassUses($annotationGenerators, $classes, $className);
-
+            $class['uses'] = array_unique($class['uses']);
+            
             $class['annotations'] = $this->generateClassAnnotations($annotationGenerators, $className);
-            $class['annotations'] = $this->fixLinesLength($class['annotations'], $config['lineLength']);
-
             if (false === isset($typesToGenerate[$className])) {
                 $class['interfaceAnnotations'] = $this->generateInterfaceAnnotations($annotationGenerators, $className);
-                $class['interfaceAnnotations'] = $this->fixLinesLength($class['interfaceAnnotations'], $config['lineLength']);
             }
 
             foreach ($class['constants'] as $constantName => $constant) {
-                $constantAnnotations = $this->generateConstantAnnotations($annotationGenerators, $className, $constantName);
-                $class['constants'][$constantName]['annotations'] = $this->fixLinesLength($constantAnnotations, $config['lineLength']);
+                $class['constants'][$constantName]['annotations'] = $this->generateConstantAnnotations($annotationGenerators, $className, $constantName);
             }
 
             foreach ($class['fields'] as $fieldName => &$field) {
@@ -380,22 +377,14 @@ class TypesGenerator
                 }
 
                 $field['typeHint'] = $typeHint;
-
                 $field['annotations'] = $this->generateFieldAnnotations($annotationGenerators, $className, $fieldName);
-                $field['annotations'] = $this->fixLinesLength($field['annotations'], $config['lineLength']);
-
                 $field['getterAnnotations'] = $this->generateGetterAnnotations($annotationGenerators, $className, $fieldName);
-                $field['getterAnnotations'] = $this->fixLinesLength($field['getterAnnotations'], $config['lineLength']);
 
                 if ($field['isArray']) {
                     $field['adderAnnotations'] = $this->generateAdderAnnotations($annotationGenerators, $className, $fieldName);
-                    $field['adderAnnotations'] = $this->fixLinesLength($field['adderAnnotations'], $config['lineLength']);
-
                     $field['removerAnnotations'] = $this->generateRemoverAnnotations($annotationGenerators, $className, $fieldName);
-                    $field['removerAnnotations'] = $this->fixLinesLength($field['removerAnnotations'], $config['lineLength']);
                 } else {
                     $field['setterAnnotations'] = $this->generateSetterAnnotations($annotationGenerators, $className, $fieldName);
-                    $field['setterAnnotations'] = $this->fixLinesLength($field['setterAnnotations'], $config['lineLength']);
                 }
             }
 
@@ -837,6 +826,7 @@ class TypesGenerator
     private function generateClassUses($annotationGenerators, $classes, $className)
     {
         $uses = $classes[$className]['uses'];
+
         if (isset($classes[$className]['interfaceNamespace'])
             && $classes[$className]['interfaceNamespace'] !== $classes[$className]['namespace']
         ) {
@@ -916,39 +906,5 @@ class TypesGenerator
 
         $config->finder(new \ArrayIterator($finder));
         $fixer->fix($config);
-    }
-
-    /**
-     * Break down a line into multiple lines smaller than the length.
-     *
-     * @param string $line
-     * @param int    $length
-     *
-     * @return array
-     */
-    private function fixLineLength($line, $length)
-    {
-        return explode("\n", wordwrap($line, $length));
-    }
-
-    /**
-     * Break down an array of lines into multiple lines smaller than the length.
-     *
-     * @param array $lines
-     * @param int   $length
-     *
-     * @return array
-     */
-    private function fixLinesLength($lines, $length)
-    {
-        if (!$length) {
-            return $lines;
-        }
-        $newLines = [];
-        foreach ($lines as $line) {
-            $newLines = array_merge($newLines, $this->fixLineLength($line, $length));
-        }
-
-        return $newLines;
     }
 }
