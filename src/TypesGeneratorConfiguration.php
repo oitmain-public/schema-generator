@@ -65,6 +65,7 @@ class TypesGeneratorConfiguration implements ConfigurationInterface
                 ->booleanNode('generateId')->defaultTrue()->info('Automatically add an id field to entities')->end()
                 ->booleanNode('useInterface')->defaultFalse()->info('Generate interfaces and use Doctrine\'s Resolve Target Entity feature')->end()
                 ->booleanNode('checkIsGoodRelations')->defaultFalse()->info('Emit a warning if a property is not derived from GoodRelations')->end()
+                ->integerNode('lineLength')->defaultNull()->info('Limit the length of the line of the code')->end()
                 ->scalarNode('header')->defaultFalse()->info('A license or any text to use as header of generated files')->example('// (c) Kévin Dunglas <dunglas@gmail.com>')->end()
                 ->arrayNode('namespaces')
                     ->addDefaultsIfNotSet()
