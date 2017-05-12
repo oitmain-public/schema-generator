@@ -262,6 +262,11 @@ class TypesGenerator
             if ($class['parent'] && isset($classes[$class['parent']])) {
                 $classes[$class['parent']]['hasChild'] = true;
                 $class['parentHasConstructor'] = $classes[$class['parent']]['hasConstructor'];
+
+                $parentNamespace = $classes[$class['parent']]['namespace'];
+                if ($parentNamespace) {
+                    $class['uses'][] = $parentNamespace.'\\'.$class['parent'];
+                }
             }
 
             foreach ($class['fields'] as &$field) {
