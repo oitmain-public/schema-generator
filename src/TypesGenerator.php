@@ -263,8 +263,12 @@ class TypesGenerator
                 $classes[$class['parent']]['hasChild'] = true;
                 $class['parentHasConstructor'] = $classes[$class['parent']]['hasConstructor'];
 
+                if ($this->isParentEnum($classes, $class) && !isset($typeConfig['namespaces']['class'])) {
+                    $class['namespace'] = $config['namespaces']['enum'];
+                }
+
                 $parentNamespace = $classes[$class['parent']]['namespace'];
-                if ($parentNamespace) {
+                if ($parentNamespace != $class['namespace']) {
                     $class['uses'][] = $parentNamespace.'\\'.$class['parent'];
                 }
             }
@@ -354,7 +358,7 @@ class TypesGenerator
         foreach ($classes as $className => &$class) {
             $class['uses'] = $this->generateClassUses($annotationGenerators, $classes, $className);
             $class['uses'] = array_unique($class['uses']);
-            
+
             $class['annotations'] = $this->generateClassAnnotations($annotationGenerators, $className);
             if (false === isset($typesToGenerate[$className])) {
                 $class['interfaceAnnotations'] = $this->generateInterfaceAnnotations($annotationGenerators, $className);
@@ -458,6 +462,29 @@ class TypesGenerator
         $subClassOf = $type->get('rdfs:subClassOf');
 
         return $subClassOf && $subClassOf->getUri() === self::SCHEMA_ORG_ENUMERATION;
+    }
+
+    /**
+     * Tests if a type is an enum.
+     *
+     * @param []     $classes
+     * @param string $class
+     *
+     * @return bool
+     */
+    private function isParentEnum($classes, $class)
+    {
+        $parent = $class['parent'];
+
+        if ($parent == self::ENUM_EXTENDS) {
+            return true;
+        }
+
+        if (!$parent) {
+            return false;
+        }
+
+        return $this->isParentEnum($classes, $classes[$parent]);
     }
 
     /**
@@ -845,6 +872,18 @@ class TypesGenerator
                     $classes[$field['range']]['interfaceName']
                 );
 
+                if (!in_array($use, $uses)) {
+                    $uses[] = $use;
+                }
+            }
+
+            if (isset($classes[$field['range']]) &&
+            $classes[$field['range']]['namespace'] != $classes[$className]['namespace']) {
+                $use = sprintf(
+                    '%s\\%s',
+                    $classes[$field['range']]['namespace'],
+                    $field['range']
+                );
                 if (!in_array($use, $uses)) {
                     $uses[] = $use;
                 }
