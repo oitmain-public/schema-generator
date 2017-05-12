@@ -459,7 +459,7 @@ class TypesGenerator
             $generatedFiles[] = $file;
         }
 
-        $this->fixCs($generatedFiles);
+        $this->fixCs($generatedFiles, $config);
     }
 
     /**
@@ -929,8 +929,9 @@ class TypesGenerator
      * Uses PHP CS Fixer to make generated files following PSR and Symfony Coding Standards.
      *
      * @param array $files
+     * @param array $generatorConfig
      */
-    private function fixCs(array $files)
+    private function fixCs(array $files, $generatorConfig)
     {
         $config = new Config();
         $fixer = new Fixer();
@@ -942,13 +943,26 @@ class TypesGenerator
             ->setAllFixers($fixer->getFixers())
             ->setConfig($config)
             ->setOptions([
-                'level' => 'symfony',
+                'level' => $generatorConfig['phpCsLevel'],
                 'fixers' => null,
                 'progress' => false,
             ])
             ->resolve();
 
-        $config->fixers($resolver->getFixers());
+        $excludeFixers = [];
+
+        if ($generatorConfig['lineLength']) {
+            $excludeFixers[] = 'Symfony\\CS\\Fixer\\Symfony\\PhpdocParamsFixer';
+        }
+
+        $fixers = $resolver->getFixers();
+        foreach ($fixers as $key => $aFixer) {
+            if (in_array(get_class($aFixer), $excludeFixers)) {
+                unset($fixers[$key]);
+            }
+        }
+
+        $config->fixers($fixers);
 
         $finder = [];
         foreach ($files as $file) {
